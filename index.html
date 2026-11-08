@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>말모이 1942: 경성 비밀 탈출 - 조선어학회 원고를 지켜라</title>
+    <link rel="stylesheet" href="style.css?v=8">
+</head>
+<body>
+    <div id="game-container">
+        <!-- 상단 HUD -->
+        <header id="hud">
+            <div class="hud-group">
+                <span class="hud-title">말모이 1942</span>
+                <span class="hud-badge" style="border-color: #b07d20; color: #ffd166;">출처: <strong>하모쌤</strong></span>
+                <span class="hud-badge"><strong id="hud-room-name">제1방 [당직실]</strong></span>
+                <span class="hud-badge">📜 <strong id="hud-manuscript-count">0/5권</strong></span>
+            </div>
+            <div class="hud-group">
+                <span id="alert-status" class="alert-indicator alert-safe">🛡️ 안전</span>
+                <button id="btn-sound-toggle" class="btn-hud">🔊 소리</button>
+                <button id="btn-guide" class="btn-hud">📜 조작법</button>
+            </div>
+        </header>
+
+        <!-- 메인 게임 캔버스 -->
+        <canvas id="game-canvas" width="1000" height="700"></canvas>
+
+        <!-- 모바일 / 태블릿 가상 터치 컨트롤러 -->
+        <div id="virtual-controller">
+            <!-- 좌측 가상 조이스틱 -->
+            <div id="touch-joystick-zone">
+                <div id="joystick-base">
+                    <div id="joystick-knob"></div>
+                </div>
+            </div>
+
+            <!-- 우측 액션 버튼들 -->
+            <div id="touch-action-zone">
+                <button id="btn-touch-run" class="touch-btn touch-btn-run" title="달리기 토글">
+                    <span class="touch-btn-icon">⚡</span>
+                    <span class="touch-btn-label">달리기</span>
+                </button>
+                <button id="btn-touch-action" class="touch-btn touch-btn-action" title="조사 및 은신 (E)">
+                    <span class="touch-btn-icon">🔍</span>
+                    <span class="touch-btn-label">조사/은신</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 상호작용 툴팁 -->
+        <div id="interaction-hint">조사하기</div>
+
+        <!-- 체포 오버레이 -->
+        <div id="caught-overlay">
+            <div id="caught-box">
+                <h2>순사에게 체포되었습니다!</h2>
+                <p>"불령선인 놈, 꼼짝 마라! 여기서 무엇을 꾸미고 있었느냐!"</p>
+                <button id="btn-caught-retry" class="btn-primary">은신처에서 다시 시도하기</button>
+            </div>
+        </div>
+
+        <!-- 오프닝 모달 -->
+        <div id="opening-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h2 class="modal-title">조선어학회 밀명: 《조선말 큰사전》 원고 탈환</h2>
+                </div>
+                <div class="modal-desc">
+                    <strong>때는 1942년 가을, 일제의 민족 말살 정책이 극에 달한 경성.</strong><br><br>
+                    조선어학회 회원들이 13년간 피땀 흘려 모아온 《조선말 큰사전》의 원고가 일제 고등경찰의 급습으로 적산가옥 건물 곳곳에 압수·은닉되었습니다.<br><br>
+                    당신은 조선어학회의 마지막 비밀 요원이 되어, 건물을 배회하는 <strong>순사들의 눈과 귀를 피해 6개의 방</strong>을 은밀히 수색해야 합니다.
+                </div>
+                <div style="background:#1b1612; padding:14px; border-radius:4px; font-size:13.5px; line-height:1.7; margin-bottom:18px;">
+                    🎯 <strong>임무 지침:</strong><br>
+                    1. <strong>6개의 방</strong>을 차례로 탐색하며 숨겨진 우리말(맞춤법, 순우리말 고유어, 잃어버린 옛 한글, 일제 잔재어 순화, 팔도 방언) 암호를 푸십시오.<br>
+                    2. 순사의 <strong>노란 부채꼴 시야(Vision Cone)</strong>에 들어가면 발각되어 추격당합니다.<br>
+                    3. 달리기(Shift) 시 발소리 파동이 순사의 주의를 끌므로 주의하십시오.<br>
+                    4. 위급할 땐 방 안의 <strong>옷장, 병풍, 캐비닛[E]</strong>에 몸을 숨기십시오.<br>
+                    5. 5권의 사전 원고를 모두 모아 <strong>제6방 지하 비밀 금고</strong>에서 탈출하십시오!
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12.5px; color: #d4a373;">기획 및 출처 : <strong>하모쌤</strong></span>
+                    <button id="btn-start-game" class="btn-primary">작전 개시 (게임 시작)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 김구 선생님 NPC 대화 모달 -->
+        <div id="npc-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h2 class="modal-title">비밀 접선 : 백범 김구 선생의 밀명</h2>
+                    <button id="npc-modal-close" class="modal-close">&times;</button>
+                </div>
+                <div class="npc-dialogue-layout">
+                    <div class="npc-portrait-frame">
+                        <img src="assets/kimgu_portrait.png" alt="백범 김구 선생">
+                    </div>
+                    <div class="npc-dialogue-body">
+                        <div class="npc-name-tag">
+                            백범 김구 <span>(대한민국 임시정부 주석)</span>
+                        </div>
+                        <div id="npc-dialogue-text" class="npc-speech-bubble">
+                            <!-- JS에서 동적으로 채워짐 -->
+                        </div>
+                    </div>
+                </div>
+                <div class="npc-dialogue-buttons">
+                    <button id="btn-npc-stealth-tip" class="btn-hud" style="padding: 8px 16px;">💡 순사 회피 요령 듣기</button>
+                    <button id="btn-npc-confirm" class="btn-primary">명심하겠습니다</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 퍼즐 모달 -->
+        <div id="puzzle-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h2 id="puzzle-title" class="modal-title">우리말 퍼즐</h2>
+                    <button id="puzzle-modal-close" class="modal-close">&times;</button>
+                </div>
+                <div id="puzzle-desc" class="modal-desc"></div>
+                <div id="puzzle-content"></div>
+                <div id="puzzle-feedback" class="puzzle-feedback"></div>
+                <div class="modal-footer">
+                    <button id="btn-submit-puzzle" class="btn-primary">암호 해독 제출</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 조작 가이드 모달 -->
+        <div id="guide-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-header">
+                    <h2 class="modal-title">게임 조작법 및 잠입 수칙</h2>
+                    <button id="guide-modal-close" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-desc" style="line-height:1.8;">
+                    <div style="background:#1b1612; padding:10px 14px; border-radius:4px; margin-bottom:12px; border-left:3px solid #ffd166;">
+                        <strong style="color:#ffd166;">📱 태블릿 & 모바일 터치 조작:</strong><br>
+                        • <strong>이동</strong>: 화면 좌하단의 <strong>가상 조이스틱</strong>을 손가락으로 드래그<br>
+                        • <strong>조사 / 은신</strong>: 화면 우하단의 <strong>[🔍 조사/은신]</strong> 버튼 터치<br>
+                        • <strong>달리기</strong>: 화면 우하단의 <strong>[⚡ 달리기]</strong> 버튼 터치 (토글 방식)
+                    </div>
+                    <strong>💻 PC 키보드 조작:</strong><br>
+                    • <strong>이동</strong>: <code>W</code>, <code>A</code>, <code>S</code>, <code>D</code> 또는 <code>방향키</code><br>
+                    • <strong>달리기</strong>: <code>Shift</code> 유지 (발소리 소음 주의)<br>
+                    • <strong>조사 / 은신</strong>: <code>E</code> 키 (가구 조사, 김구 선생 대화, 옷장 숨기)<br><br>
+                    <span style="color:#e29b47;">🛡️ <strong>잠입 수칙</strong>: 순사의 노란 손전등 시야를 피하고, 발각 시 옷장/벽장[E]으로 피신하십시오!</span>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 12px; color: #b7a99a;">출처 : <strong>하모쌤</strong></span>
+                    <button onclick="window.game.closeGuideModal()" class="btn-primary">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 엔딩 모달 -->
+        <div id="ending-modal" class="modal-overlay">
+            <div class="modal-box" style="text-align:center;">
+                <div class="modal-header" style="justify-content:center;">
+                    <h2 class="modal-title" style="color:#f39c12; font-size:26px;">작전 성공 : 《조선말 큰사전》 원고 구출</h2>
+                </div>
+                <div class="modal-desc" style="text-align:left; font-size:15px; line-height:1.9;">
+                    <p style="text-align:center; font-size:18px; color:#fefae0; margin-bottom:15px; font-weight:bold;">
+                        "말은 사람의 생각과 겨레의 얼을 담는 그릇이다.<br>말이 살아야 나라가 산다!"
+                    </p>
+                    당신은 서슬 퍼런 일제 순사들의 감시망을 뚫고 16,400여 장에 달하는 방대한 《조선말 큰사전》 원고를 무사히 품에 안고 비밀 탈출 사다리를 올랐습니다.<br><br>
+                    빼앗긴 들판에서도 우리 말과 글의 온전한 뿌리를 지켜내고자 목숨을 바쳤던 조선어학회 선열들의 숭고한 넋이 당신의 지혜를 통해 살아 숨 쉬게 되었습니다.<br><br>
+                    <strong>1945년 8월 15일, 마침내 해방과 함께 우리말은 다시 온 나라에 울려 퍼질 것입니다.</strong>
+                </div>
+                <div style="margin-bottom: 15px; font-size: 13px; color: #ffd166;">
+                    기획 및 출처 : <strong>하모쌤</strong> | 조선어학회 선열 헌정
+                </div>
+                <div class="modal-footer" style="justify-content:center;">
+                    <button id="btn-restart-game" class="btn-primary">처음부터 다시 플레이하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 로드 순서 -->
+    <script src="audio.js?v=9"></script>
+    <script src="puzzleData.js?v=9"></script>
+    <script src="game.js?v=9"></script>
+</body>
+</html>

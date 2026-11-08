@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background: #333; color: white; font-family: sans-serif; }
+        .row { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; }
+        .frame { width: 128px; height: 143px; border: 1px solid red; position: relative; overflow: hidden; background: #222; }
+        .frame img { position: absolute; }
+    </style>
+</head>
+<body>
+    <h2>Row 0 (Down)</h2>
+    <div class="row" id="row0"></div>
+    <h2>Row 1 (Up)</h2>
+    <div class="row" id="row1"></div>
+    <h2>Row 2 (Row index 2)</h2>
+    <div class="row" id="row2"></div>
+    <h2>Row 3 (Row index 3)</h2>
+    <div class="row" id="row3"></div>
+
+    <script>
+        for (let r = 0; r < 4; r++) {
+            const container = document.getElementById('row' + r);
+            for (let c = 0; c < 8; c++) {
+                const div = document.createElement('div');
+                div.className = 'frame';
+                div.innerHTML = `<img src="assets/officer_spritesheet.png" style="left: -${c * 128}px; top: -${r * 143}px;">`;
+                container.appendChild(div);
+            }
+        }
+    </script>
+</body>
+</html>
